@@ -1,5 +1,6 @@
 def quick_sort(a,begin,end):
     # divide and conquer
+    # sort in place
     # set quit condition
     # core part: do_partition
     if begin < end:
