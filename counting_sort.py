@@ -1,5 +1,6 @@
 def counting_sort(a):
     # stable sort
+    # T(n) = θ(k + n)
     # need extra memory
     # original array a
     # counting array c

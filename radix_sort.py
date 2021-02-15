@@ -1,5 +1,6 @@
 def radix_sort(a):
     # because it uses counting sort in the loop
+    # T(n) = θ(d(k + n))
     # it also needs extra memory
     # sort bit by bit
     # start from least significant bit
