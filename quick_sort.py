@@ -1,5 +1,8 @@
 def quick_sort(a,begin,end):
     # divide and conquer
+    # normal case T(n) = nlgn
+    # worst case (reversed) T(n) = n^2
+    # random quick sort T(n) = θ(nlgn)
     # sort in place
     # set quit condition
     # core part: do_partition

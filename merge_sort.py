@@ -1,5 +1,6 @@
 def merge_sort(a):
     # divide and conquer
+    # T(n) = nlgn
     # using extra memory (not sort in place)
     # core part: merge 2 arrays into 1 sorted array
     if len(a) < 2:
