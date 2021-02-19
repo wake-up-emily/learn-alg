@@ -4,16 +4,17 @@ class Worst_linear_time_topK:
     # now T(n) = Ω(n)
 
     def select(self,a,begin,end,i):
-        mid = self.get_mid(a,begin,end)
-        x = self.partition_by_mid(a,begin,end,mid)
-        k = x - begin + 1
-        if i == k:
-            res = a[x]
-        elif i < k:
-            res = self.select(a,begin,x-1,i)
-        elif i > k:
-            res = self.select(a,x+1,end,i-k)
-        return res
+        if i > begin and i < (end - begin + 1):
+            mid = self.get_mid(a,begin,end)
+            x = self.partition_by_mid(a,begin,end,mid)
+            k = x - begin + 1
+            if i == k:
+                res = a[x]
+            elif i < k:
+                res = self.select(a,begin,x-1,i)
+            elif i > k:
+                res = self.select(a,x+1,end,i-k)
+            return res
 
     def get_mid(self,a,begin,end):
         # think about the array as a 5 col matrix

@@ -6,6 +6,12 @@ from worst_linear_select import *
 # especially when all elements are the same
 
 """
+WORST LINEAR SELECT:
+T(1000) = 0.588
+
+RANDOM SELECT:
+T(1000) = 0.056
+
 case 1 array with same element
 array ready with length: 1000
 size of array: 
@@ -31,6 +37,17 @@ Maximum memory usage by worst linear topk: 33.0703125
 
 
 case 3 random array
+
+WORST LINEAR SELECT:
+T(1000) = 0.003
+T(5000) = 0.014
+T(10000) = 0.028
+
+RANDOM SELECT:
+T(1000) = 0.0004
+T(5000) = 0.0015
+T(10000) = 0.027
+
 array ready with length: 1000
 size of array: 
 9024
@@ -103,6 +120,7 @@ def run_worst_linear_topk():
 
 if __name__ == '__main__':
     array_size = [1000,5000,10000]
+    # array_size = [1000]
 
     import random
 
