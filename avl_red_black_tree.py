@@ -97,6 +97,7 @@ class RB_Tree:
         new_top.parent = node.parent
         if not node.parent:
             self.root = new_top
+            self.root.color = 0
         elif node == node.parent.lchild:
             node.parent.lchild = new_top
         else:
@@ -106,11 +107,19 @@ class RB_Tree:
         node.parent = new_top
 
     def recoloring(self,node):
-        node.color = 1
-        if node.lchild:
-            node.lchild.color = 0
-        if node.rchild:
-            node.rchild.color = 0
+        if not node.color:
+            node.color = 1
+            if node.lchild:
+                node.lchild.color = 0
+            if node.rchild:
+                node.rchild.color = 0
+
+        if node.color:
+            node.color = 0
+            if node.lchild:
+                node.lchild.color = 1
+            if node.rchild:
+                node.rchild.color = 1
 
     def left_type(self,node):
         if node.parent == node.parent.parent.lchild:
@@ -150,9 +159,6 @@ class RB_Tree:
         # we have inserted a red node x
         # whose parent is red and grandparent is black
         #
-        # type A
-        # parent is lchild
-        #
         # check uncle
         # if uncle is also red
         #
@@ -166,7 +172,8 @@ class RB_Tree:
         #        it is our new x
         #
         # elif uncle is black
-        #
+        # type A
+        # parent is lchild
         # case 2 2-rotations
         #        x is rchild 
         #        it is z shape p[p[x]]-p[x]-x
@@ -177,7 +184,10 @@ class RB_Tree:
         #        x is lchild
         #        it is line shape p[p[x]]-p[x]-x
         #        right rotate p[p[x]] and recoloring to put black node at the top(property 4)
-        #        orginal p[p[x]] to red and p[x] to balck
+        #        and color both children to red
+        # type B
+        # parent is rchild
+        # do mirror (case 2) case 3
         """
         x = self.bst_insert(key)
         while x is not self.root or x.color:
