@@ -196,8 +196,8 @@ class RB_Tree:
                 if self.has_uncle(x):
                     if self.uncle_is_red(x):
                         # case 1
-                        self.recoloring(grandparent)
-                        x = grandparent
+                        self.recoloring(x.parent)
+                        x = x.parent
                     else:
                         if self.left_type(x):
                             # type a has 2 cases
@@ -207,7 +207,8 @@ class RB_Tree:
                             # case 3
                             self.right_rotate(grandparent)
                             self.recoloring(x)
-                            x = grandparent
+                            # check parent level
+                            x = x.parent
                         else:
                             # type b has 2 cases
                             if x == x.parent.lchild:
@@ -216,7 +217,7 @@ class RB_Tree:
                             # case 3
                             self.left_rotate(grandparent)
                             self.recoloring(x)
-                            x = grandparent
+                            x = x.parent
                 else:
                     break
             else:
