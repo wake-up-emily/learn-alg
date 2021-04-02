@@ -43,8 +43,7 @@ class Btree:
                 # make room first
                 # split it into multi children and connect them with a parent(old or new)
                 # insert key in a proper child
-                if len(node.children) <= self.order:
-                    self.insert_child(key,node)
+                self.insert_child(key,node)
 
     def insert_keys(self,key,node):
         node.keys.append(key)
@@ -65,40 +64,50 @@ class Btree:
         # elif this node is the current root
         # create a new parent with middle key
         # reset root to the new parent
-        # connect/fill in children
+        # connect/fill in childre
 
         # assume it's a 2-3-4 tree
         middle_key = node.keys[1]
+
         if node.parent:
             parent = node.parent
-            self.insert_keys(middle_key,parent)
-            lchild = Btree_Node(node.keys[0],parent)
-            rchild = Btree_Node(node.keys[2],parent)
-            for i in range(len(parent.keys)):
-                if middle_key <= parent.keys[i]:
-                    parent.children.pop(i)
-                    parent.children.insert(i,lchild)
-                    parent.children.insert(i+1,rchild)
-                    break
+            if len(parent.keys) < self.order:
+                self.insert_keys(middle_key,parent)
+
+                lchild = Btree_Node(node.keys[0],parent)
+                rchild = Btree_Node(node.keys[2],parent)
+                
+                for i in range(len(parent.keys)):
+                    if middle_key == parent.keys[i]:
+                        parent.children.pop(i)
+                        parent.children.insert(i,lchild)
+                        parent.children.insert(i+1,rchild)
+                        break
+            else:
+                self.split(parent)
         else:
             parent = Btree_Node(middle_key)
             self.root = parent
+
             lchild = Btree_Node(node.keys[0],parent)
             rchild = Btree_Node(node.keys[2],parent)
+
             parent.children.append(lchild)
             parent.children.append(rchild)
-        
+
+        if node.children:
+            lchild.children.append(node.children[0])
+            lchild.children.append(node.children[1])
+            rchild.children.append(node.children[2])
+            rchild.children.append(node.children[3])
+
         return parent
 
     def child_to_insert(self,key,node):
-        if key < node.keys[0]:
-            return node.children[0]
-        elif key > node.keys[-1]:
-            return node.children[-1]
-        elif key > node.keys[0] and key < node.keys[1]:
-            return node.children[1]
-        else:
-            return node.children[2]
+        for i in range(len(node.keys)):
+            if key <= node.keys[i]:
+                return node.children[i]
+        return node.children[-1]
 
     def insert_child(self,key,node):
         parent = self.split(node)
@@ -160,7 +169,7 @@ class Btree:
     def _min_node(self,node):
         min_node = node
         if node.children:
-            min_value = self._min_node(node.children[0])
+            min_node = self._min_node(node.children[0])
         return min_node
 
     def find(self,key):
