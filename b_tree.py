@@ -7,6 +7,7 @@ class Btree_Node:
 class Btree:
     # default 2-3-4-tree
     # actually it is written in 2-3-4 tree
+    # keep in mind that B tree intend to keep all the children at same height
     def __init__(self,order=4):
         self.root = None
 
@@ -18,7 +19,11 @@ class Btree:
         # if there is 1 key, there are 2 nodes
         # if there is 2 keys, there are 3 nodes
         # if there is 3 keys, there are 4 nodes
+
         self.order = order
+        self.max_key_cnt = self.order - 1
+        # self.min_key_cnt = int(self.order/2) - 1
+        # self.max_children_cnt = self.order
 
     def insert(self,key):
         if self.root:
@@ -27,22 +32,45 @@ class Btree:
             self.root = Btree_Node(key)
 
     def do_insert(self,key,node):
+        # because all the children should have same height
+        # so basically if a child still has a seat
+        # insert key directly into the child does not affect the height of children
+        # if it is full
+        # thinking that if we move one key from child to parent (if parent has place to receive)
+        # then we can repeatly insert key into the child without affecting the height of children
+        # so 2 things:
+        # first we should always start from bottom up
+        # then we should always make sure parent has place to receive
         if node.children:
-            # not leaf
+            # bottom up
+            # if not leaf
             # down to next level until reach leaf
             child = self.child_to_insert(key,node)
             self.do_insert(key,child)
         else:
             # if node is leaf
-            if len(node.keys) < self.order - 1:
-                # if node.keys not full
+            if len(node.keys) < self.max_key_cnt:
+                # case 1
+                # if not full
                 # insert directly
                 self.insert_keys(key,node)
             else:
-                # it is full
-                # make room first
-                # split it into multi children and connect them with a parent(old or new)
-                # insert key in a proper child
+                # case 3
+                # if node has a parent and it is also full
+                # it will have impact on parent level insertion
+                # so we have to make room for grandparent
+                # the height of parent level and below will all plus 1
+                # then we loop again to insert
+                if node.parent:
+                    if len(node.parent.keys) == self.max_key_cnt:
+                        parent = self.split(node.parent)
+                        child = self.child_to_insert(key,parent)
+                        return self.do_insert(key,child)
+                
+                # case 2
+                # if node has no parent
+                # or if node has a parent but still not full
+                # we can do it at this level
                 self.insert_child(key,node)
 
     def insert_keys(self,key,node):
@@ -53,53 +81,59 @@ class Btree:
         # it's easier if you see a gif
         # eg. https://www.educative.io/page/5689413791121408/80001
         # try to turn it into simple language:
-        # when we want to insert one key to this node
-        # if this node is full
-        # this func helps to split it into multi children and connect them with a parent(old or new)
-        # and then return the parent node
-        # if there is a parent
-        # push the middle key of this level to key of parent level
-        # change other 2 keys from key to node
-        # replace the original full node with 2 new nodes
-        # elif this node is the current root
-        # create a new parent with middle key
-        # reset root to the new parent
-        # connect/fill in childre
+        # in 2-3-4 tree
+        # this func helps to split a 3-key node into 1 parent node and 2 children node 
+        # connect them with the orginal parent (now the grandparent)
+        # fill in children and correct children's parent
+        # return the new parent node
 
         # assume it's a 2-3-4 tree
         middle_key = node.keys[1]
 
         if node.parent:
+            # we will check if there's enough place to insert outside this func
             parent = node.parent
-            if len(parent.keys) < self.order:
-                self.insert_keys(middle_key,parent)
+            self.insert_keys(middle_key,parent)
 
-                lchild = Btree_Node(node.keys[0],parent)
-                rchild = Btree_Node(node.keys[2],parent)
-                
-                for i in range(len(parent.keys)):
-                    if middle_key == parent.keys[i]:
-                        parent.children.pop(i)
-                        parent.children.insert(i,lchild)
-                        parent.children.insert(i+1,rchild)
-                        break
-            else:
-                self.split(parent)
-        else:
-            parent = Btree_Node(middle_key)
-            self.root = parent
-
+            # create 2 empty child node with only key and parent
             lchild = Btree_Node(node.keys[0],parent)
             rchild = Btree_Node(node.keys[2],parent)
+            
+            # pop out old children
+            # connect parent and new children
+            for i in range(len(parent.keys)):
+                if middle_key == parent.keys[i]:
+                    parent.children.pop(i)
+                    parent.children.insert(i,lchild)
+                    parent.children.insert(i+1,rchild)
+                    break
+        else:
+            # create an empty parent node with only key 
+            parent = Btree_Node(middle_key)
 
+            # reset root
+            self.root = parent
+
+            # create 2 empty child node with only key and parent
+            lchild = Btree_Node(node.keys[0],parent)
+            rchild = Btree_Node(node.keys[2],parent)
+            
+            # connect new parent and new children
             parent.children.append(lchild)
             parent.children.append(rchild)
 
         if node.children:
+            # copy children info
             lchild.children.append(node.children[0])
             lchild.children.append(node.children[1])
             rchild.children.append(node.children[2])
             rchild.children.append(node.children[3])
+
+            # fix children's parent
+            lchild.children[0].parent = lchild
+            lchild.children[1].parent = lchild
+            rchild.children[0].parent = rchild
+            rchild.children[1].parent = rchild
 
         return parent
 
@@ -135,7 +169,7 @@ class Btree:
 
     def _print_keys(self,node):
         for key in node.keys:
-            print(key)
+            print("  " + str(key))
 
     def _print_key(self,key):
         print(key)
