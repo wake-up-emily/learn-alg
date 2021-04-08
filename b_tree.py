@@ -240,14 +240,35 @@ class Btree:
             return 0
 
     def need_to_shrink(self,node):
+<<<<<<< HEAD
         # if node is parent, node.child1, node.child2 are all has 1 key
         if len(node.keys) == 1 and len(node.children) == 2:
             return self.shrink_flag(node)
+=======
+        # if node.parent, node, node.sibling are all has 1 key
+        if len(node.children) == 2:
+            count = 0
+            for child in node.children:
+                if len(child.keys) == 1:
+                    count += 1
+            if count == 2:
+                return 1
+>>>>>>> 74c132256c5feae235d5c70933d37c1e8d0faca1
 
         return 0
 
     def shrink(self,parent):
+<<<<<<< HEAD
         if parent == self.root:
+=======
+        if parent = self.root:
+                """
+                10                       ->5  10 15
+                /   \        ------>      /   \  /   \
+            ->5    15
+            /   \  /   \
+            """
+>>>>>>> 74c132256c5feae235d5c70933d37c1e8d0faca1
             parent.keys.insert(0,parent.children[0].keys[0])
             parent.keys.append(parent.children[1].keys[0])
             parent.children = parent.children[0].children + parent.children[1].children
@@ -261,6 +282,7 @@ class Btree:
                             parent_sibling = parent.parent.children[i+1]
                         break
                 
+<<<<<<< HEAD
                 parent_sibling_keys = len(parent_sibling.keys)
 
                 while parent_sibling_keys > 1:
@@ -288,6 +310,28 @@ class Btree:
 
             self.left_merge(parent)
 
+=======
+                while len(parent_sibling.keys) > 1:
+                    merge_flag = 0
+                    merge_cnt = 0
+                    merge_child_index = 0
+                    for child in parent_sibling.children:
+                        if len(child.keys) == 1:
+                            merge_cnt += 1
+                        else:
+                            merge_cnt = 0
+
+                    if merge_cnt > 2:
+                        merge_flag = 1
+
+                    if merge_flag:
+
+
+
+
+
+    
+>>>>>>> 74c132256c5feae235d5c70933d37c1e8d0faca1
     def switch(self,key,pre_node,node):
         pre_key = pre_node.keys[-1]
         for i in range(len(node.keys)):
@@ -456,6 +500,7 @@ class Btree:
                     self.delete_case_2(key,node)
                 else:
                     self.delete_case_3(key,node)
+
 
     def get_pre_node(self,key,node):
         for i in range(len(node.keys)):
