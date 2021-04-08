@@ -87,6 +87,7 @@ class Btree:
         # fill in children and correct children's parent
         # return the new parent node
 
+
         # assume it's a 2-3-4 tree
         middle_key = node.keys[1]
 
@@ -226,29 +227,67 @@ class Btree:
                 child = self.child_to_insert(key,node)
                 return self._find_node(key,child)
 
+    def shrink_flag(self,node):
+        count = 0
+        for child in node.children:
+            if len(child.keys) == 1:
+                count += 1
+                if count == 2:
+                    return 1
+            else:
+                count = 0
+        else:
+            return 0
+
     def need_to_shrink(self,node):
-        # if node.parent, node, node.sibling are all 2-node
-        if len(node.children) == 2:
-            count = 0
-            for child in node.children:
-                if len(child.keys) == 1:
-                    count += 1
-            if count == 2:
-                return 1
+        # if node is parent, node.child1, node.child2 are all has 1 key
+        if len(node.keys) == 1 and len(node.children) == 2:
+            return self.shrink_flag(node)
 
         return 0
 
     def shrink(self,parent):
-        """
-             10                       ->5  10 15
-            /   \        ------>      /   \  /   \
-          ->5    15
-        /   \  /   \
-        """
-        parent.keys.insert(0,parent.children[0].keys[0])
-        parent.keys.append(parent.children[1].keys[0])
-        parent.children = parent.children[0].children + parent.children[1].children
-    
+        if parent == self.root:
+            parent.keys.insert(0,parent.children[0].keys[0])
+            parent.keys.append(parent.children[1].keys[0])
+            parent.children = parent.children[0].children + parent.children[1].children
+        else:
+            if self.can_borrow(parent):
+                for i in range(len(parent.parent.children)):
+                    if parent == parent.parent.children[i]:
+                        if self.borrow_from_left(parent):
+                            parent_sibling = parent.parent.children[i-1]
+                        else:
+                            parent_sibling = parent.parent.children[i+1]
+                        break
+                
+                parent_sibling_keys = len(parent_sibling.keys)
+
+                while parent_sibling_keys > 1:
+                    merge_flag = 0
+                    merge_cnt = 0
+                    merge_child_index = 0
+                    for i in range(len(parent_sibling.children)):
+                        if len(parent_sibling.children[i].keys) == 1:
+                            merge_cnt += 1
+                            if merge_cnt == 2:
+                                merge_child_index = i-1
+                                merge_flag = 1
+                                break
+                        else:
+                            merge_cnt = 0
+
+                    if merge_flag:
+                        self.left_merge(parent_sibling.children[merge_child_index])
+                        parent_sibling_keys -= 1
+                    else:
+                        break
+            elif parent.parent:
+                if self.need_to_shrink(parent.parent):
+                    return self.shrink(parent.parent)
+
+            self.left_merge(parent)
+
     def switch(self,key,pre_node,node):
         pre_key = pre_node.keys[-1]
         for i in range(len(node.keys)):
@@ -294,6 +333,7 @@ class Btree:
                 node.keys.append(node.parent.keys[i])
                 node.keys.append(node.parent.children[i+1].keys[0])
                 node.children = node.parent.children[i].children + node.parent.children[i+1].children
+                break
 
         if node == node.parent.children[-1]:
             node.keys.insert(0,node.parent.keys[-1])
@@ -305,6 +345,7 @@ class Btree:
         if len(node.parent.keys) == 1:
             if node.parent == self.root:
                 self.root = node
+                
             elif node.parent.parent:
                 for i in range(len(node.parent.parent.children)):
                     if node.parent == node.parent.parent.children[i]:
@@ -320,6 +361,9 @@ class Btree:
             else:
                 node.parent.keys.pop(j)
                 node.parent.children.pop(j+1)
+
+        for child in node.children:
+            child.parent = node
         
     def delete_case_3(self,key,node):
         self.left_merge(node)
@@ -328,20 +372,36 @@ class Btree:
     def delete(self,key):
         # find node of the key
         # if found node
+        # safely delete it
+        # which means to delete it at bottom because it does not affect the height
+
+        # a shortcut
+        # it has no child
         # if this 2-3-4 tree has only 1 node(no child)
         # it can be treated as a list
         # just do as deleting an element from a list
-        # elif it has children
-        # all we want is to delete the key safely
-        # like we did in bst delete
+
+        # or
+        # it has children
+        # if the height is squeezed
+        # we have less loop and it saves time
         # so do some pre-work
-        # if node & node sibling & node parent are 2-node
+        # if node & node sibling & node parent all has 1 key
         # shrink first
-        # 
+        # if parent is root
+        # just flatten the tree to be a list
+        # if parent is subtree
+        # try to flatten parent layer (parent, parent's sibling and parent'parent)
+        # by merge parent's sibling's child, another child and parent's sibling
+        # until parent's sibling has 1 key
+        # then flatten
+        
         # if key not in leaf node
         # safely move it to leaf
         # case 1
         # leaf node has more than 1 key
+        # delete it won't affact tree height
+        # just do it
         # else
         # case 2
         # leaf node has one key and we want to delete it
@@ -350,21 +410,33 @@ class Btree:
         # case 3
         # elif sibling also has only 1 key
         # can't borrow from anyone
+        # if parent has more than 1 key
         # merge node, one of the parent key and it's sibling(kind of like shrink)
         # eg. left merge or right merge dependingly
         # now merge node has more than 1 key (and our key is in it)
+        # if parent has only 1 key 
+        # sibling has also 1 key
+        # push one layer up and now the pivot is parent
+        # if parent's sibling has more than 1 key (and it has child)
+        # do case 3 to parent's sibling's child until parent's sibling has 1 key
+        # now shrink parent, parent's sibling and parent's parent
+        # give pivot back to original node
+        # merge node, node's sibling and parent
+        # delete key from merged node
         if self.root:
             node = self._find_node(key,self.root)
 
             if self.need_to_shrink(node):
-                # additional
                 self.shrink(node)
+                return self.delete(key)
             
             if not self.root.children:
                 # if 2-3-4 tree has only 3 last keys (no child)
+                # shortcut 
                 self.safe_delete(key,self.root)
 
             else:
+                # switch key to delete to bottom node
                 if node.children:
                     pre_node = self.get_pre_node(key,node)
 
